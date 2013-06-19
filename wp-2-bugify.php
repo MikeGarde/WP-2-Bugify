@@ -18,6 +18,95 @@ if(isset($_POST['bugify_url'])) {
 	$bugify['key'] = '';
 }
 
+
+if(isset($_POST['bugify_url'])) {
+
+	if(preg_match('/root|all_issues|issues_mine|issues_following|issue_overview|search|filters|filter_issues|groups|users|user_detailsusers_issues|projects|projects_issues|milestones|milestones_issues|history|queue|system/is', $_POST['method']))
+		$bugify['method'] = 'GET';
+	else
+		$bugify['method'] = 'POST';
+
+
+
+	switch ($_POST['method']) {
+		case 'root':
+			echo "GET /";
+			break;
+		case 'all_issues':
+			echo "GET /issues";
+			break;
+		case 'new_issue':
+			echo "POST /issues";
+			break;
+		case 'issues_mine':
+			echo "GET /issues/mine";
+			break;
+		case 'issues_following':
+			echo " GET /issues/following";
+			break;
+		case 'issues_following_manage':
+			echo " POST /issues/following/{issue_id}";
+			break;
+		case 'issue_overview':
+			echo " GET /issues/{issue_id}";
+			break;
+		case 'update_issue':
+			echo " POST /issues/{issue_id}";
+			break;
+		case 'search':
+			echo " GET /issues/search";
+			break;
+		case 'filters':
+			echo " GET /filters";
+			break;
+		case 'filter_issues':
+			echo " GET /filters/{filter_id}/issues";
+			break;
+		case 'groups':
+			echo " GET /groups";
+			break;
+		case 'users':
+			echo " GET /users";
+			break;
+		case 'new_user':
+			echo " POST /users";
+			break;
+		case 'user_details':
+			echo " GET /users/{username}";
+			break;
+		case 'edit_user':
+			echo " POST /users/{username}";
+			break;
+		case 'users_issues':
+			echo " GET /users/{username}/issues";
+			break;
+		case 'projects':
+			echo " GET /projects";
+			break;
+		case 'projects_issues':
+			echo " GET /projects/{project_slug}/issues";
+			break;
+		case 'milestones':
+			echo "GET /milestones";
+			break;
+		case 'milestones_issues':
+			echo "GET /milestones/{milestone_id}/issues";
+			break;
+		case 'history':
+			echo "GET /history";
+			break;
+		case 'queue':
+			echo "GET /queue";
+			break;
+		case 'system':
+			echo "GET /system";
+			break;
+		case 'auth':
+			echo "xxxxxxx";
+			break;
+	}
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -73,8 +162,11 @@ if(isset($_POST['bugify_url'])) {
 	</select>
 
 	<input type="submit" value="Send" /> <input type="reset" />
-
 	</form>
+
+<?php if(isset($_POST['bugify_url'])) : ?>
+
+<?php endif; ?>
 </body>
 </html>
 <?php
