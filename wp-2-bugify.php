@@ -4,9 +4,48 @@ require_once('functions.php');
 
 $output = false;
 
+$methods = array(
+			'root'						=> array('GET',  ''),
+			'all_issues'				=> array('GET',  '/issues'),
+			'new_issue'					=> array('POST', '/issues'),
+			'issues_mine'				=> array('GET',  '/issues/mine'),
+			'issues_following'			=> array('GET',  '/issues/following'),
+			'issues_following_manage'	=> array('POST', '/issues/following/{issue_id}'),
+			'issue_overview'			=> array('GET',  '/issues/{issue_id}'),
+			'update_issue'				=> array('POST', '/issues/{issue_id}'),
+			'search'					=> array('GET',  '/issues/search'),
+			'filters'					=> array('GET',  '/filters'),
+			'filter_issues'				=> array('GET',  '/filters/{filter_id}/issues'),
+			'groups'					=> array('GET',  '/groups'),
+			'users'						=> array('GET',  '/users'),
+			'new_user'					=> array('POST', '/users'),
+			'user_details'				=> array('GET',  '/users/{username}'),
+			'edit_user'					=> array('POST', '/users/{username}'),
+			'users_issues'				=> array('GET',  '/users/{username}/issues'),
+			'projects'					=> array('GET',  '/projects'),
+			'projects_issues'			=> array('GET',  '/projects/{project_slug}/issues'),
+			'milestones'				=> array('GET',  '/milestones'),
+			'milestones_issues'			=> array('GET',  '/milestones/{milestone_id}/issues'),
+			'history'					=> array('GET',  '/history'),
+			'queue'						=> array('GET',  '/queue'),
+			'system'					=> array('GET',  '/system'),
+			'auth'						=> array('POST', '/auth')
+		);
+
+$formats = array(
+			'txt'	=> 'TXT (useful for debugging) (.txt)',
+			'json'	=> 'JSON (.json)',
+			'jsonp' => 'JSON-P (JSON with padding) (.jsonp)',
+			'php'	=> 'Serialised PHP (.php)',
+			'xml'	=> 'XML (.xml)'
+		);
+
+
+$bugify['request'] = false;
+
 if(isset($_POST['bugify_url'])) {
-	$bugify['url'] = rtrim($_POST['bugify_url'], '/');
-	$bugify['key'] =  trim($_POST['bugify_key']);
+	$bugify['url'] = trim($_POST['bugify_url']);
+	$bugify['key'] = trim($_POST['bugify_key']);
 
 	if($_POST['bugify_url'] != $_COOKIE['bugify_url'])
 		setcookie('bugify_url', $_POST['bugify_url'], time() + 604800);
@@ -25,118 +64,16 @@ if(isset($_POST['bugify_url'])) {
 
 if(isset($_POST['bugify_url'])) {
 
-	if(preg_match('/root|all_issues|issues_mine|issues_following|issue_overview|search|filters|filter_issues|groups|users|user_detailsusers_issues|projects|projects_issues|milestones|milestones_issues|history|queue|system/is', $_POST['method']))
-		$bugify['method'] = 'GET';
-	else
-		$bugify['method'] = 'POST';
+	$bugify['name']   = $_POST['method'];
+	$bugify['method'] = $methods[$_POST['method']][0];
+	$bugify['path']   = $methods[$_POST['method']][1];
 
 	$bugify['format'] = $_POST['format'];
 
-	switch ($_POST['method']) {
-		case 'root':
-			//echo "GET /";
-			$bugify['path'] = '';
-			break;
-		case 'all_issues':
-			//echo "GET /issues";
-			$bugify['path'] = '/issues';
-			break;
-		case 'new_issue':
-			//echo "POST /issues";
-			$bugify['path'] = '/issues';
-			break;
-		case 'issues_mine':
-			//echo "GET /issues/mine";
-			$bugify['path'] = '/issues/mine';
-			break;
-		case 'issues_following':
-			//echo " GET /issues/following";
-			$bugify['path'] = '/issues/following';
-			break;
-		case 'issues_following_manage':
-			//echo " POST /issues/following/{issue_id}";
-			$bugify['path'] = '/issues/following/{issue_id}';
-			break;
-		case 'issue_overview':
-			//echo " GET /issues/{issue_id}";
-			$bugify['path'] = '/issues/{issue_id}';
-			break;
-		case 'update_issue':
-			//echo " POST /issues/{issue_id}";
-			$bugify['path'] = '/issues/{issue_id}';
-			break;
-		case 'search':
-			//echo " GET /issues/search";
-			$bugify['path'] = '/issues/search';
-			break;
-		case 'filters':
-			//echo " GET /filters";
-			$bugify['path'] = '/filters';
-			break;
-		case 'filter_issues':
-			//echo " GET /filters/{filter_id}/issues";
-			$bugify['path'] = '/filters/{filter_id}/issues';
-			break;
-		case 'groups':
-			//echo " GET /groups";
-			$bugify['path'] = '/groups';
-			break;
-		case 'users':
-			//echo " GET /users";
-			$bugify['path'] = '/users';
-			break;
-		case 'new_user':
-			//echo " POST /users";
-			$bugify['path'] = '/users';
-			break;
-		case 'user_details':
-			//echo " GET /users/{username}";
-			$bugify['path'] = '/users/{username}';
-			break;
-		case 'edit_user':
-			//echo " POST /users/{username}";
-			$bugify['path'] = '/users/{username}';
-			break;
-		case 'users_issues':
-			//echo " GET /users/{username}/issues";
-			$bugify['path'] = '/users/{username}/issues';
-			break;
-		case 'projects':
-			//echo " GET /projects";
-			$bugify['path'] = '/projects';
-			break;
-		case 'projects_issues':
-			//echo " GET /projects/{project_slug}/issues";
-			$bugify['path'] = '/projects/{project_slug}/issues';
-			break;
-		case 'milestones':
-			//echo "GET /milestones";
-			$bugify['path'] = '/milestones';
-			break;
-		case 'milestones_issues':
-			//echo "GET /milestones/{milestone_id}/issues";
-			$bugify['path'] = '/milestones/{milestone_id}/issues';
-			break;
-		case 'history':
-			//echo "GET /history";
-			$bugify['path'] = '/history';
-			break;
-		case 'queue':
-			//echo "GET /queue";
-			$bugify['path'] = '/queue';
-			break;
-		case 'system':
-			//echo "GET /system";
-			$bugify['path'] = '/system';
-			break;
-		case 'auth':
-			echo "POST /auth";
-			$bugify['path'] = '/auth';
-			break;
-	}
+	$bugify['request'] = $bugify['url'].$bugify['path'].'.'.$bugify['format'].'?api_key='.$bugify['key'];
 
 	if($bugify['method'] == 'GET') {
-		$output = get_remote_file($bugify['url'].$bugify['path'].'.'.$bugify['format'].'?api_key='.$bugify['key']);
+		$output = get_remote_file($bugify['request']);
 	}
 
 }
@@ -159,49 +96,35 @@ if(isset($_POST['bugify_url'])) {
 
 	<label for="method">API Method: </label>
 	<select name="method">
-		<option value="root">GET .{format}</option>
-		<option value="all_issues">GET /issues.{format}</option>
-		<option value="new_issue">POST /issues.{format}</option>
-		<option value="issues_mine">GET /issues/mine.{format}</option>
-		<option value="issues_following">GET /issues/following.{format}</option>
-		<option value="issues_following_manage">POST /issues/following/{issue_id}.{format}</option>
-		<option value="issue_overview">GET /issues/{issue_id}.{format}</option>
-		<option value="update_issue">POST /issues/{issue_id}.{format}</option>
-		<option value="search">GET /issues/search.{format}</option>
-		<option value="filters">GET /filters.{format}</option>
-		<option value="filter_issues">GET /filters/{filter_id}/issues.{format}</option>
-		<option value="groups">GET /groups.{format}</option>
-		<option value="users">GET /users.{format}</option>
-		<option value="new_user">POST /users.{format}</option>
-		<option value="user_details">GET /users/{username}.{format}</option>
-		<option value="edit_user">POST /users/{username}.{format}</option>
-		<option value="users_issues">GET /users/{username}/issues.{format}</option>
-		<option value="projects">GET /projects.{format}</option>
-		<option value="projects_issues">GET /projects/{project_slug}/issues.{format}</option>
-		<option value="milestones">GET /milestones.{format}</option>
-		<option value="milestones_issues">GET /milestones/{milestone_id}/issues.{format}</option>
-		<option value="history">GET /history.{format}</option>
-		<option value="queue">GET /queue.{format}</option>
-		<option value="system">GET /system.{format}</option>
-		<option value="auth">POST /auth.{format}</option>
+<?php	foreach($methods as $method => $options) {
+			$selected = ($bugify['name'] == $method) ? ' selected="selected"' : '';
+			echo '<option value="'. $method .'"'.$selected.'>'. $options[0] .' '. $options[1] .'</option>';
+		} //endforeach; ?>
 	</select>
 
 	<label for="format">Response Format: </label>
 	<select name="format">
-		<option value="txt">TXT (useful for debugging) (.txt)</option>
-		<option value="json">JSON (.json)</option>
-		<option value="jsonp">JSON-P (JSON with padding) (.jsonp)</option>
-		<option value="php">Serialised PHP (.php)</option>
-		<option value="xml">XML (.xml)</option>
+<?php	foreach($formats as $format => $name) {
+			$selected = ($bugify['format'] == $format) ? ' selected="selected"' : '';
+			echo '<option value="'. $format .'"'.$selected.'>'. $name .'</option>';
+		} //endforeach; ?>
 	</select>
 
 	<input type="submit" value="Send" /> <input type="reset" />
 	</form>
 
+	<?php if($bugify['request']) echo '<h3>'. $bugify['request'] .'</h3>'; ?>
+
 <?php if($output) : ?>
 
-	<div id="output">
+	<h2>RAW Output</h2>
+	<div class="raw output">
 <?php	echo $output; ?>
+	</div>
+
+	<h2>Formatted Output (soon)</h2>
+	<div class="clean output">
+<?php	//echo $output; ?>
 	</div>
 
 <?php endif; ?>

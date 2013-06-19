@@ -1,6 +1,5 @@
 <?php
 function get_remote_file($url, $method='GET') {
-	echo 'getting file: '.$url;
 // get the host name and url path
 	$parsedUrl = parse_url($url);
 	$host = $parsedUrl['host'];
