@@ -24,6 +24,13 @@ class bugify {
 							110 );
 
 		add_submenu_page(	'bugify',
+							'Submit to Bugify',
+							'Submit to Bugify',
+							'manage_options',
+							'bugify',
+							array($this, 'bugify_view_submit') );
+
+		add_submenu_page(	'bugify',
 							'Bugify Options',
 							'Options',
 							'manage_options',
