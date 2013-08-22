@@ -11,8 +11,19 @@ License: MIT
 */
 
 class bugify {
+	private $opt_name = 'wp-2-bugify';
+	public $options  = 'null';
+
 	function __construct() {
 		add_action('admin_menu', array(&$this, 'bugify_admin_menu'));
+		register_activation_hook( __FILE__, array($this, 'activate') );
+		
+		$this->options = get_option($this->opt_name);
+	}
+	function activate() {
+		$default_options = array('url' => null,
+								 'key' => null );
+		add_option( $this->opt_name, $default_options, null, 'no' );
 	}
 	function bugify_admin_menu() {
 		add_menu_page(		'Submit to Bugify',
