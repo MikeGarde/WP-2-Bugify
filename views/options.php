@@ -1,24 +1,17 @@
 <div class="wrap">
-<?php screen_icon(); ?>
+<?php screen_icon('bugify'); ?>
 <h2>Bugify Options</h2>
 
 <form method="post" action="options.php">
-    <?php settings_fields( 'bugify_settings' ); ?>
-    <?php do_settings( 'bugify_settings' ); ?>
     <table class="form-table">
         <tr valign="top">
-        <th scope="row">New Option Name</th>
-        <td><input type="text" name="new_option_name" value="<?php echo get_option('new_option_name'); ?>" /></td>
+        <th scope="row">API URL</th>
+        <td><input type="text" name="bugify_url" value="<?php echo get_option('new_option_name'); ?>" /></td>
         </tr>
 
         <tr valign="top">
-        <th scope="row">Some Other Option</th>
-        <td><input type="text" name="some_other_option" value="<?php echo get_option('some_other_option'); ?>" /></td>
-        </tr>
-
-        <tr valign="top">
-        <th scope="row">Options, Etc.</th>
-        <td><input type="text" name="option_etc" value="<?php echo get_option('option_etc'); ?>" /></td>
+        <th scope="row">API Key</th>
+        <td><input type="text" name="bugify_key" value="<?php echo get_option('some_other_option'); ?>" /></td>
         </tr>
     </table>
 

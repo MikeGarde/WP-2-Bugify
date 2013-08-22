@@ -12,26 +12,34 @@ License: MIT
 
 class bugify {
 	private $opt_name = 'wp-2-bugify';
-	public $options  = 'null';
+	public  $version  = 0.1;
+	private $options  = null;
+	private $plugin_url = null;
 
 	function __construct() {
 		add_action('admin_menu', array(&$this, 'bugify_admin_menu'));
 		register_activation_hook( __FILE__, array($this, 'activate') );
 		
 		$this->options = get_option($this->opt_name);
+		$this->plugin_url = plugin_dir_url( __FILE__ );
+		add_action('admin_enqueue_scripts', array(&$this, 'register_style') );
 	}
 	function activate() {
 		$default_options = array('url' => null,
 								 'key' => null );
 		add_option( $this->opt_name, $default_options, null, 'no' );
 	}
+    public function register_style() {
+        wp_register_style( 'bugify-css', $this->plugin_url . 'css/bugify.css', array(), (string)$this->version );
+        wp_enqueue_style(  'bugify-css' );
+    }
 	function bugify_admin_menu() {
-		add_menu_page(		'Submit to Bugify',
+		add_menu_page(		'Submit a Bug',
 							'Bugify',
 							'manage_options',
 							'bugify',
 							array($this, 'bugify_view_submit'),
-							plugins_url( 'WP-2-Bugify/img/bugify-logo-medium.png' ),
+							$this->plugin_url . 'img/bugify-logo-small.png',
 							110 );
 
 		add_submenu_page(	'bugify',
