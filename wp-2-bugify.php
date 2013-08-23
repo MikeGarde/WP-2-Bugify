@@ -11,10 +11,15 @@ License: MIT
 */
 
 class bugify {
-	private $opt_name = 'wp-2-bugify';
-	public  $version  = 0.1;
-	private $options  = null;
+	private $opt_name	= 'wp-2-bugify';
+	public  $version 	= 0.1;
+	private $options 	= null;
 	private $plugin_url = null;
+	public  $request 	= array('method'=>null,
+								'scheme'=>'http',
+								'host'	=>null, 'port'=>80,
+								'path'	=>null,
+								'query'	=>array());
 
 	/*                                                           
 		   d888888o.   8 8888888888 8888888 8888888888 8 8888      88 8 888888888o   
@@ -35,6 +40,9 @@ class bugify {
 		
 		$this->options = get_option($this->opt_name);
 		$this->plugin_url = plugin_dir_url( __FILE__ );
+
+		$this->clean_url($this->options['url']);
+
 		add_action('admin_enqueue_scripts', array(&$this, 'register_style') );
 	}
 	function activate() {
@@ -56,8 +64,8 @@ class bugify {
 							110 );
 
 		add_submenu_page(	'bugify',
-							'Submit to Bugify',
-							'Submit to Bugify',
+							'Submit a Bug',
+							'Submit a Bug',
 							'manage_options',
 							'bugify',
 							array($this, 'bugify_view_submit') );
@@ -154,7 +162,7 @@ class bugify {
 		   $this->opt_name);
 
 	   add_settings_field('key',
-		   'API URL',
+		   'API Key',
 		   array($this, 'setting_callback_key'),
 		   'bugify',
 		   $this->opt_name);
@@ -187,8 +195,42 @@ class bugify {
 		 .888888888. `88888.  8 8888          8 8888              8888     ,88'   ` 8888     ,88'   
 		.8'       `8. `88888. 8 8888          8 8888               `8888888P'        `8888888P'     
 	*/
-	function request_url(){}
+	private function api_call(){
 
+		$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'.json';
+
+		$process = curl_init($url);
+		curl_setopt($process, CURLOPT_HTTPHEADER, array('Content-Type: */*', 'Accept-Encoding: deflate'));
+		curl_setopt($process, CURLOPT_HEADER, 1);
+		curl_setopt($process, CURLOPT_USERAGENT, 'wp-2-bugify');
+		curl_setopt($process, CURLOPT_USERPWD, $this->options['key'] .':');
+		curl_setopt($process, CURLOPT_TIMEOUT, 30);
+		curl_setopt($process, CURLOPT_POST, 0);
+		//curl_setopt($process, CURLOPT_POSTFIELDS, $payloadName);
+		curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
+		$data = curl_exec($process);
+		curl_close($process);
+
+		$return = false;
+
+		foreach(preg_split("/((\r?\n)|(\r\n?))/", $data) as $line){
+			
+			if($return === false){
+				if($line == ''){
+					$return = '';
+				} elseif(($pos = strpos($line, ':')) !== false){
+					$headers[strtolower(trim(substr($line, 0, $pos)))] = trim(substr($line, $pos+1));
+				} elseif(substr($line, 0, 4) == 'HTTP') {
+					$headers['code'] = substr($line, 9, 3);
+				}
+			} else {
+				$return .= $line ."\r";
+			}
+		}
+
+		return json_decode($return);
+		// NOTE: $headers unused at this point but captured for (possible) future debugging
+	}
 	/*
 		8 888888888o   8 8888      88     ,o888888o.     8 8888 8 8888888888 `8.`8888.      ,8'
 		8 8888    `88. 8 8888      88    8888     `88.   8 8888 8 8888        `8.`8888.    ,8'
@@ -213,6 +255,51 @@ class bugify {
 			`8888888P'  .8'       `8. `88888. 8 888888888888 8 888888888888 `Y8888P ,88P'
 	 */
 	function get_issues(){}
+
+	public function ping_system(){
+		$this->request['path']  .= '/system';
+		$this->request['method'] = 'GET';
+
+		$responce = $this->api_call();
+
+		return $responce;
+	}
+	/*                                                                                                            
+		8 888888888o.      ,o888888o.     8 8888      88 8888888 8888888888  8 8888 b.             8 8 8888888888   
+		8 8888    `88.  . 8888     `88.   8 8888      88       8 8888        8 8888 888o.          8 8 8888         
+		8 8888     `88 ,8 8888       `8b  8 8888      88       8 8888        8 8888 Y88888o.       8 8 8888         
+		8 8888     ,88 88 8888        `8b 8 8888      88       8 8888        8 8888 .`Y888888o.    8 8 8888         
+		8 8888.   ,88' 88 8888         88 8 8888      88       8 8888        8 8888 8o. `Y888888o. 8 8 888888888888 
+		8 888888888P'  88 8888         88 8 8888      88       8 8888        8 8888 8`Y8o. `Y88888o8 8 8888         
+		8 8888`8b      88 8888        ,8P 8 8888      88       8 8888        8 8888 8   `Y8o. `Y8888 8 8888         
+		8 8888 `8b.    `8 8888       ,8P  ` 8888     ,8P       8 8888        8 8888 8      `Y8o. `Y8 8 8888         
+		8 8888   `8b.   ` 8888     ,88'     8888   ,d8P        8 8888        8 8888 8         `Y8o.` 8 8888         
+		8 8888     `88.    `8888888P'        `Y88888P'         8 8888        8 8888 8            `Yo 8 888888888888 
+	*/
+	private function clean_url($url){
+		if(substr($url, 0, 10) == 'javascript')
+			return false;
+
+		$parseURL = parse_url($url);
+
+		if(substr($parseURL['path'], 0, 2) == '//'){
+			$parseURL['host'] = substr(trim($parseURL['path']), 2);
+			$parseURL['path'] = '';
+		}
+
+		if(substr($parseURL['path'], 0, 2) == './') 
+			$parseURL['path'] = substr($parseURL['path'], 2);
+
+		if( (substr($parseURL['host'], -1, 1) != '/') && (substr($parseURL['path'], 0, 1) != '/') )
+			$parseURL['path'] = '/' . $parseURL['path'];
+
+		if(!isset($parseURL['port']))
+			$parseURL['port'] = ($parseURL['scheme'] == 'http') ? 80 : 443;
+
+		if(isset($parseURL['scheme']))	$this->request['scheme'] = $parseURL['scheme'];
+		if(isset($parseURL['host'])) 	$this->request['host'] = $parseURL['host'];
+		if(isset($parseURL['path'])) 	$this->request['path'] = $parseURL['path'];
+	}
 }
 $bugify = new bugify;
 
