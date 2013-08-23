@@ -15,11 +15,10 @@ class bugify {
 	public  $version 	= 0.1;
 	private $options 	= null;
 	private $plugin_url = null;
-	public  $request 	= array('method'=>null,
-								'scheme'=>'http',
+	private $cache		= array();
+	public  $request 	= array('scheme'=>'http',
 								'host'	=>null, 'port'=>80,
-								'path'	=>null,
-								'query'	=>array());
+								'path'	=>null );
 
 	/*                                                           
 		   d888888o.   8 8888888888 8888888 8888888888 8 8888      88 8 888888888o   
@@ -195,9 +194,24 @@ class bugify {
 		 .888888888. `88888.  8 8888          8 8888              8888     ,88'   ` 8888     ,88'   
 		.8'       `8. `88888. 8 8888          8 8888               `8888888P'        `8888888P'     
 	*/
-	private function api_call(){
+	private function api_call($service, $method='GET', $query=null){
 
-		$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'.json';
+		if(isset($this->cache[$service])) {
+			return $this->cache[$service];
+		}
+		if(!empty($query)) {
+			foreach($query as $var => &$value) {
+				$value = urlencode($value);
+				$query_string .= $key.'='.$value.'&';
+			}
+			unset($value);
+			rtrim($query_string, '&');
+		}
+
+		$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'/'.$service.'.json';
+
+		if( ($method == 'GET') && (!empty($query)) )
+			$url .= '?'. $query_string;
 
 		$process = curl_init($url);
 		curl_setopt($process, CURLOPT_HTTPHEADER, array('Content-Type: */*', 'Accept-Encoding: deflate'));
@@ -205,8 +219,9 @@ class bugify {
 		curl_setopt($process, CURLOPT_USERAGENT, 'wp-2-bugify');
 		curl_setopt($process, CURLOPT_USERPWD, $this->options['key'] .':');
 		curl_setopt($process, CURLOPT_TIMEOUT, 30);
-		curl_setopt($process, CURLOPT_POST, 0);
-		//curl_setopt($process, CURLOPT_POSTFIELDS, $payloadName);
+		curl_setopt($process, CURLOPT_POST, ($method == 'GET' ? 0 : 1));
+		if($method == 'POST')
+			curl_setopt($process, CURLOPT_POSTFIELDS, $query_string);
 		curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
 		$data = curl_exec($process);
 		curl_close($process);
@@ -227,6 +242,8 @@ class bugify {
 				$return .= $line ."\r";
 			}
 		}
+
+		$this->cache[$service] = $return;
 
 		return json_decode($return);
 		// NOTE: $headers unused at this point but captured for (possible) future debugging
@@ -254,13 +271,15 @@ class bugify {
 		   8888     ,88' .888888888. `88888.  8 8888         8 8888        `8b.  ;8.`8888
 			`8888888P'  .8'       `8. `88888. 8 888888888888 8 888888888888 `Y8888P ,88P'
 	 */
-	function get_issues(){}
+	public function get_issues(){}
 
+	public function get_projects(){
+		$responce = $this->api_call('projects', 'GET');
+
+		return $responce;
+	}
 	public function ping_system(){
-		$this->request['path']  .= '/system';
-		$this->request['method'] = 'GET';
-
-		$responce = $this->api_call();
+		$responce = $this->api_call('system', 'GET');
 
 		return $responce;
 	}

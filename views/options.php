@@ -59,7 +59,7 @@ endif;
 
 //print_r($test);
 
-//print_r($bugify->request);
+print_r($bugify->get_projects());
 
 ?>
 </pre>
