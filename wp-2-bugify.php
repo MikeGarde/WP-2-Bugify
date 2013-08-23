@@ -177,7 +177,7 @@ class bugify {
 
 	function setting_callback_url() {
 	   echo '<input type="text" name="'.$this->opt_name.'_url" id="gv_thumbnails_insert_into_excerpt" value="'. $this->options['url'] .'" size="35" /><br />
-	   			<small><strong>Example:</strong> http://demo.bugify.com/api - Don\'t forget the <span style="color: red">/api</span></small>';
+	   			<small><strong>Example:</strong> http://demo.bugify.com/api - Don\'t forget the <span style="color: blue">/api</span></small>';
    }
 
 	function setting_callback_key() {

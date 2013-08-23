@@ -46,7 +46,7 @@ if(isset($bugify->options['url']) && isset($bugify->options['key'])) :
 <?php
 
 	if(isset($test->version))
-		echo '<p>Your server is running Bugify version: <strong>'. $test->version .'</strong></p>';
+		echo '<p><span style="color: LimeGreen;">Success!</span> Your server is running Bugify version: <strong>'. $test->version .'</strong></p>';
 	else
 		echo '<p>Unable to communicate with your Bugify server</p>';
 
