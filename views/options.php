@@ -20,9 +20,25 @@ global $bugify;
 
 if(isset($bugify->options['url']) && isset($bugify->options['key'])) :
 
+?>
+
+<h3>Connection Info</h3>
+<p>Based on the above URL I see the following</p>
+<pre>
+  scheme : <?php echo $bugify->request['scheme']; ?> 
+  host   : <?php echo $bugify->request['host']; ?> 
+  path   : <?php echo $bugify->request['path']; ?>
+</pre>
+
+<?php
+
 	$test = $bugify->ping_system();
 	
-	echo '<h3>Connection Info</h3>';
+?>
+
+<h3>Testing Connection</h3>
+
+<?php
 
 	if(isset($test->version))
 		echo '<p>Your server is running Bugify version: <strong>'. $test->version .'</strong></p>';
@@ -33,22 +49,15 @@ endif;
 
 ?>
 
-<h3>Debug Info</h3>
-<p>Based on the above URL I see the following</p>
-<pre>
-  scheme : <?php echo $bugify->request['scheme']; ?> 
-  host   : <?php echo $bugify->request['host']; ?> 
-  path   : <?php echo $bugify->request['path']; ?>
-</pre>
-
 </div>
+
 
 
 
 <pre>
 <?php
 
-print_r($test);
+//print_r($test);
 
 //print_r($bugify->request);
 
