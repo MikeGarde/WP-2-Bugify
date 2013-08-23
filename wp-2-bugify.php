@@ -245,6 +245,8 @@ class bugify {
 				$return .= $line ."\r";
 			}
 		}
+		if($headers['code'] == 401)
+			die('<div>Error: WP-2-Bugify is <strong>Unauthorized</strong> to do what you have asked by your Bugify install</div>');
 
 		$this->cache[$service] = $return;
 

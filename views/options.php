@@ -60,11 +60,13 @@ endif;
 
 
 <pre>
+	Projects: 
+	
 <?php
 
 //print_r($test);
 
-print_r($bugify->get_projects());
+print_r( $bugify->get_projects() );
 
 ?>
 </pre>
