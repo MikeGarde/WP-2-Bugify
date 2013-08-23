@@ -28,6 +28,11 @@ if(isset($bugify->options['url']) && isset($bugify->options['key'])) :
   scheme : <?php echo $bugify->request['scheme']; ?> 
   host   : <?php echo $bugify->request['host']; ?> 
   path   : <?php echo $bugify->request['path']; ?>
+
+  <?php 
+  	if($bugify->request['path'] != '/api')
+  		echo "\n".'<strong style="color: red;">WARNING:</strong> The path indicated was not expected.';
+  ?>
 </pre>
 
 <?php

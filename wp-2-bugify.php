@@ -37,7 +37,8 @@ class bugify {
 		add_action('admin_menu', array(&$this, 'bugify_admin_menu'));
 		register_activation_hook( __FILE__, array($this, 'activate') );
 		
-		$this->options = get_option($this->opt_name);
+		$this->options['url'] = get_option($this->opt_name.'_url');
+		$this->options['key'] = get_option($this->opt_name.'_key');
 		$this->plugin_url = plugin_dir_url( __FILE__ );
 
 		$this->clean_url($this->options['url']);
@@ -154,20 +155,20 @@ class bugify {
 		   array($this, 'settings_callback_api'),
 		   'bugify');
 
-	   add_settings_field('url',
+	   add_settings_field($this->opt_name.'_url',
 		   'API URL',
 		   array($this, 'setting_callback_url'),
 		   'bugify',
 		   $this->opt_name);
 
-	   add_settings_field('key',
+	   add_settings_field($this->opt_name.'_key',
 		   'API Key',
 		   array($this, 'setting_callback_key'),
 		   'bugify',
 		   $this->opt_name);
 
-	   register_setting('bugify','url');
-	   register_setting('bugify','key');
+	   register_setting('bugify',$this->opt_name.'_url');
+	   register_setting('bugify',$this->opt_name.'_key');
 	}
 
 	function settings_callback_api() {
@@ -175,11 +176,13 @@ class bugify {
 	}
 
 	function setting_callback_url() {
-	   echo '<input type="text" name="url" id="gv_thumbnails_insert_into_excerpt" value="'. $this->options['url'] .'" />';
+	   echo '<input type="text" name="'.$this->opt_name.'_url" id="gv_thumbnails_insert_into_excerpt" value="'. $this->options['url'] .'" size="35" /><br />
+	   			<small><strong>Example:</strong> http://demo.bugify.com/api - Don\'t forget the <span style="color: red">/api</span></small>';
    }
 
 	function setting_callback_key() {
-	   echo '<input type="text" name="key" id="gv_thumbnails_insert_into_excerpt" value="'. $this->options['key'] .'" />';
+	   echo '<input type="text" name="'.$this->opt_name.'_key" id="gv_thumbnails_insert_into_excerpt" value="'. $this->options['key'] .'" size="35" /><br />
+	   			<small>Go to your Bugify install, then \'My Account\' (or Settings->Users). Your API Key will be located in the right column.</small>';
    }
 
 	/*
