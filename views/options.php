@@ -8,15 +8,14 @@ global $bugify;
 <h2>Bugify Options</h2>
 
 <form method="post" action="options.php">
-<?php
-	settings_fields('bugify');
-	do_settings_sections('bugify');
-	
-	submit_button();
-?>
-</form>
 
 <?php
+
+settings_fields('bugify');
+do_settings_sections('bugify');
+
+submit_button();
+
 
 if(isset($bugify->options['url']) && isset($bugify->options['key'])) :
 
@@ -31,7 +30,7 @@ if(isset($bugify->options['url']) && isset($bugify->options['key'])) :
 
   <?php 
   	if($bugify->request['path'] != '/api')
-  		echo "\n".'<strong style="color: red;">WARNING:</strong> The path indicated was not expected.';
+  		echo PHP_EOL.'<strong style="color: red;">WARNING:</strong> The path indicated was not expected.';
   ?>
 </pre>
 
@@ -56,17 +55,16 @@ endif;
 
 </div>
 
+<?php include('table-projects.php'); ?>
 
-
+</form>
 
 <pre>
-	Projects: 
-	
 <?php
 
 //print_r($test);
 
-print_r( $bugify->get_projects() );
+//print_r( $projects );
 
 ?>
 </pre>

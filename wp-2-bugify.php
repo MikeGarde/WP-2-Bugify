@@ -5,7 +5,7 @@ Version: 0.1
 Plugin URI: http://www.iamparagon.com/
 Description: Allow visitors to your site to submit bugify issues
 Author: Mike Garde
-Author URI: http://philipjoyner.com/
+Author URI: https://plus.google.com/108419406824828146291
 Updated: 2013-06-19
 License: MIT
 */
@@ -15,6 +15,7 @@ class bugify {
 	public  $version 	= 0.1;
 	private $options 	= null;
 	private $plugin_url = null;
+	public  $status		= false; // false = unknown, connected = connection aviable, true = ready
 	private $cache		= array();
 	public  $request 	= array('scheme'=>'http',
 								'host'	=>null, 'port'=>80,
@@ -39,6 +40,8 @@ class bugify {
 		
 		$this->options['url'] = get_option($this->opt_name.'_url');
 		$this->options['key'] = get_option($this->opt_name.'_key');
+		$this->options['project'] = get_option($this->opt_name.'_project');
+		$this->options['categories'] = get_option($this->opt_name.'_categories');
 		$this->plugin_url = plugin_dir_url( __FILE__ );
 
 		$this->clean_url($this->options['url']);
@@ -47,7 +50,8 @@ class bugify {
 	}
 	function activate() {
 		$default_options = array('url' => 'http://demo.bugify.com/api',
-								 'key' => 'LSGjeU4yP1X493ud1hNniA==' );
+								 'key' => 'LSGjeU4yP1X493ud1hNniA==',
+								 'project' => null );
 		add_option( $this->opt_name, $default_options, null, 'no' );
 	}
     public function register_style() {
@@ -169,6 +173,8 @@ class bugify {
 
 	   register_setting('bugify',$this->opt_name.'_url');
 	   register_setting('bugify',$this->opt_name.'_key');
+	   register_setting('bugify',$this->opt_name.'_project');
+	   register_setting('bugify',$this->opt_name.'_categories');
 	}
 
 	function settings_callback_api() {
@@ -199,59 +205,72 @@ class bugify {
 	*/
 	private function api_call($service, $method='GET', $query=null){
 
-		if(isset($this->cache[$service])) {
-			return $this->cache[$service];
-		}
-		if(!empty($query)) {
+		try {
+
+			if(isset($this->cache[$service])) {
+				return $this->cache[$service];
+			}
+
+			$query['api_key'] = $this->options['key'];
+
 			foreach($query as $var => &$value) {
 				$value = urlencode($value);
-				$query_string .= $key.'='.$value.'&';
+				$query_string .= $var.'='.$value.'&';
 			}
 			unset($value);
 			rtrim($query_string, '&');
-		}
 
-		$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'/'.$service.'.json';
+			$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'/'.$service.'.json';
 
-		if( ($method == 'GET') && (!empty($query)) )
-			$url .= '?'. $query_string;
+			if( ($method == 'GET') && (!empty($query)) )
+				$url .= '?'. $query_string;
 
-		$process = curl_init($url);
-		curl_setopt($process, CURLOPT_HTTPHEADER, array('Content-Type: */*', 'Accept-Encoding: deflate'));
-		curl_setopt($process, CURLOPT_HEADER, 1);
-		curl_setopt($process, CURLOPT_USERAGENT, 'wp-2-bugify');
-		curl_setopt($process, CURLOPT_USERPWD, $this->options['key'] .':');
-		curl_setopt($process, CURLOPT_TIMEOUT, 30);
-		curl_setopt($process, CURLOPT_POST, ($method == 'GET' ? 0 : 1));
-		if($method == 'POST')
-			curl_setopt($process, CURLOPT_POSTFIELDS, $query_string);
-		curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
-		$data = curl_exec($process);
-		curl_close($process);
+			$process = curl_init($url);
+			curl_setopt($process, CURLOPT_HTTPHEADER, array('Content-Type: */*', 'Accept-Encoding: deflate'));
+			curl_setopt($process, CURLOPT_HEADER, 1);
+			curl_setopt($process, CURLOPT_USERAGENT, 'wp-2-bugify');
+			//curl_setopt($process, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+			//curl_setopt($process, CURLOPT_USERPWD, $this->options['key'] .':empty');
+			curl_setopt($process, CURLOPT_TIMEOUT, 30);
+			curl_setopt($process, CURLOPT_POST, ($method == 'GET' ? 0 : 1));
+			if($method == 'POST')
+				curl_setopt($process, CURLOPT_POSTFIELDS, $query_string);
+			curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
+			$data = curl_exec($process);
+			curl_close($process);
 
-		$return = false;
+			$return = false;
 
-		foreach(preg_split("/((\r?\n)|(\r\n?))/", $data) as $line){
-			
-			if($return === false){
-				if($line == ''){
-					$return = '';
-				} elseif(($pos = strpos($line, ':')) !== false){
-					$headers[strtolower(trim(substr($line, 0, $pos)))] = trim(substr($line, $pos+1));
-				} elseif(substr($line, 0, 4) == 'HTTP') {
-					$headers['code'] = substr($line, 9, 3);
+			foreach(preg_split("/((\r?\n)|(\r\n?))/", $data) as $line){
+				
+				if($return === false){
+					if($line == ''){
+						$return = '';
+					} elseif(($pos = strpos($line, ':')) !== false){
+						$headers[strtolower(trim(substr($line, 0, $pos)))] = trim(substr($line, $pos+1));
+					} elseif(substr($line, 0, 4) == 'HTTP') {
+						$headers['code'] = substr($line, 9, 3);
+					}
+				} else {
+					$return .= $line ."\r";
 				}
-			} else {
-				$return .= $line ."\r";
 			}
+			if($headers['code'] == 401)
+				throw new Exception('WP-2-Bugify is <strong>Unauthorized</strong> to do what you have asked by your Bugify install');
+
+			$this->cache[$service] = $return;
+			$thos->status = true;
+
+			return json_decode($return);
+			// NOTE: $headers unused at this point but captured for (possible) future debugging
+
+		} catch (Exception $error) {
+			echo '<div>Error: '. $error->getMessage() .'</div>';
+			echo '<pre>'.PHP_EOL;
+			echo 'URL: '.$url.PHP_EOL;
+			print_r($process);
+			echo '</pre>';
 		}
-		if($headers['code'] == 401)
-			die('<div>Error: WP-2-Bugify is <strong>Unauthorized</strong> to do what you have asked by your Bugify install</div>');
-
-		$this->cache[$service] = $return;
-
-		return json_decode($return);
-		// NOTE: $headers unused at this point but captured for (possible) future debugging
 	}
 	/*
 		8 888888888o   8 8888      88     ,o888888o.     8 8888 8 8888888888 `8.`8888.      ,8'
