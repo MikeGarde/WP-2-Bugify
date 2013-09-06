@@ -62,7 +62,7 @@ endif;
 <pre>
 <?php
 
-//print_r($test);
+//print_r($bugify->options);
 
 //print_r( $projects );
 

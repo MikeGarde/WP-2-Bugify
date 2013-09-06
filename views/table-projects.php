@@ -4,9 +4,9 @@ $projects = $bugify->get_projects();
 
 ?>
 
-<h3>Avaiable Projects</h3>
+<h2>Select A Project</h2>
 
-<p>Please select the project and category you want reports to be filed under.</h2>
+<p>Please select the project you want reports to be filed under.</h2>
 
 <script type="text/javascript">
 	window.onload=function(){
@@ -33,7 +33,6 @@ table.wp2b_table td.name {min-width: 185px;}
 table.wp2b_table td select {min-width: 140px;}
 </style>
 
-
 <table id="wp2b_table_hover" class="wp2b_table" border="1">
 	<thead>
 		<tr>
@@ -42,7 +41,9 @@ table.wp2b_table td select {min-width: 140px;}
 		</tr>
 	</thead>
 	<tbody>
-<?php 		foreach($projects->projects as $project) : 
+<?php 		$default_categories = '';
+
+			foreach($projects->projects as $project) : 
 
 				$print_categories = '';
 				foreach($project->categories as $category) {
@@ -50,17 +51,21 @@ table.wp2b_table td select {min-width: 140px;}
 					$print_categories .= $category->name.', '; 
 				}
 
-?>
+				$print_categories = rtrim($print_categories, ', ');
 
+				if($bugify->options['project'] == $project->id)
+					$default_categories = json_encode($project_categories);
+?>
 		<tr>
 			<td><input 	type="radio" 
-						name="<?php echo $bugify->opt_name; ?>'_project" 
+						name="<?php echo $bugify->opt_name; ?>_project" 
 						id="project_<?php echo $project->id; ?>" 
 						value="<?php echo $project->id; ?>"
-						data-cat='<?php echo json_encode($project_categories); ?>'></td>
+						data-cat='<?php echo json_encode($project_categories); ?>'
+						<?php if($bugify->options['project'] == $project->id) echo ' checked="checked"'; ?> /></td>
 			<td class="name"><label for="project_<?php echo $project->id; ?>"><?php echo $project->name; ?></label></td>
 			<td>
-<?php 			echo '<span data-id="project_'. $project->id .'" >'.rtrim($print_categories, ', ').'</span>'; ?>
+<?php 			echo $print_categories; ?>
 			</td>
 		</tr>
 <?php 		endforeach; // projects ?>
@@ -68,7 +73,7 @@ table.wp2b_table td select {min-width: 140px;}
 	</tbody>
 </table>
 
-<input type="hidden" class="category_target" name="<?php echo $bugify->opt_name; ?>_categories" value="" />
+<input type="hidden" class="category_target" name="<?php echo $bugify->opt_name; ?>_categories" value="<?php echo $default_categories; ?>" />
 
 <script>
 	jQuery('#wp2b_table_hover input[type="radio"').change(function() {

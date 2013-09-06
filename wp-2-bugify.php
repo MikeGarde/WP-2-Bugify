@@ -50,8 +50,7 @@ class bugify {
 	}
 	function activate() {
 		$default_options = array('url' => 'http://demo.bugify.com/api',
-								 'key' => 'LSGjeU4yP1X493ud1hNniA==',
-								 'project' => null );
+								 'key' => 'LSGjeU4yP1X493ud1hNniA==');
 		add_option( $this->opt_name, $default_options, null, 'no' );
 	}
     public function register_style() {
