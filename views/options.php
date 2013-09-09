@@ -55,7 +55,7 @@ endif;
 
 </div>
 
-<?php include('table-projects.php'); ?>
+<?php $bugify->select_project(); ?>
 
 </form>
 

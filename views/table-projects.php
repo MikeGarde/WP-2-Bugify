@@ -1,9 +1,3 @@
-<?php
-
-$projects = $bugify->get_projects();
-
-?>
-
 <h2>Select A Project</h2>
 
 <p>Please select the project you want reports to be filed under.</h2>
@@ -53,16 +47,16 @@ table.wp2b_table td select {min-width: 140px;}
 
 				$print_categories = rtrim($print_categories, ', ');
 
-				if($bugify->options['project'] == $project->id)
+				if($this->options['project'] == $project->id)
 					$default_categories = json_encode($project_categories);
 ?>
 		<tr>
 			<td><input 	type="radio" 
-						name="<?php echo $bugify->opt_name; ?>_project" 
+						name="<?php echo $this->opt_name; ?>_project" 
 						id="project_<?php echo $project->id; ?>" 
 						value="<?php echo $project->id; ?>"
 						data-cat='<?php echo json_encode($project_categories); ?>'
-						<?php if($bugify->options['project'] == $project->id) echo ' checked="checked"'; ?> /></td>
+						<?php if($this->options['project'] == $project->id) echo ' checked="checked"'; ?> /></td>
 			<td class="name"><label for="project_<?php echo $project->id; ?>"><?php echo $project->name; ?></label></td>
 			<td>
 <?php 			echo $print_categories; ?>
@@ -73,7 +67,7 @@ table.wp2b_table td select {min-width: 140px;}
 	</tbody>
 </table>
 
-<input type="hidden" class="category_target" name="<?php echo $bugify->opt_name; ?>_categories" value="<?php echo $default_categories; ?>" />
+<input type="hidden" class="category_target" name="<?php echo $this->opt_name; ?>_categories" value="<?php echo $default_categories; ?>" />
 
 <script>
 	jQuery('#wp2b_table_hover input[type="radio"').change(function() {
@@ -86,10 +80,5 @@ table.wp2b_table td select {min-width: 140px;}
 <?php submit_button(); ?>
 
 <?php
-/*
-				<select name="category_<?php echo $project->id; ?>">
-<?php 				foreach($project->categories as $category) : ?>
-						<option value="<?php echo $category->id; ?>"><?php echo $category->name; ?></option>
-<?php 				endforeach; // category ?>
-				</select>
-*/
+if($this->ready)
+	echo '<p style="color: LimeGreen; font-size: 26px;">Setup Complete!</p>';

@@ -15,7 +15,7 @@ class bugify {
 	public  $version 	= 0.1;
 	private $options 	= null;
 	private $plugin_url = null;
-	public  $status		= false; // false = unknown, connected = connection aviable, true = ready
+	public  $ready		= false; // connection status: false = unknown, true = ready
 	private $cache		= array();
 	public  $request 	= array('scheme'=>'http',
 								'host'	=>null, 'port'=>80,
@@ -43,6 +43,9 @@ class bugify {
 		$this->options['project'] = get_option($this->opt_name.'_project');
 		$this->options['categories'] = get_option($this->opt_name.'_categories');
 		$this->plugin_url = plugin_dir_url( __FILE__ );
+
+		if($this->options['project'] > 0)
+			$this->ready = true;
 
 		$this->clean_url($this->options['url']);
 
@@ -248,27 +251,44 @@ class bugify {
 					} elseif(($pos = strpos($line, ':')) !== false){
 						$headers[strtolower(trim(substr($line, 0, $pos)))] = trim(substr($line, $pos+1));
 					} elseif(substr($line, 0, 4) == 'HTTP') {
-						$headers['code'] = substr($line, 9, 3);
+						$headers['code'] = intval(substr($line, 9, 3));
 					}
 				} else {
 					$return .= $line ."\r";
 				}
 			}
-			if($headers['code'] == 401)
-				throw new Exception('WP-2-Bugify is <strong>Unauthorized</strong> to do what you have asked by your Bugify install');
+
+
+			if($headers['code'] != 200) {
+
+				$error_message = 'WP-2-Bugify is <strong style="color: red;"">{error}</strong> to do what you have asked';
+
+				switch ( $headers['code'] ) {
+					case 401:
+						$error_message = str_replace('{error}', 'Unauthorized', $error_message) .'. Please check your API Key';
+						break;
+					default:
+						$error_message = 'An <strong>Unknown</strong> error happened';
+						break;
+				}
+
+				throw new Exception($error_message, $headers['code']);
+			}
 
 			$this->cache[$service] = $return;
-			$thos->status = true;
 
 			return json_decode($return);
-			// NOTE: $headers unused at this point but captured for (possible) future debugging
 
 		} catch (Exception $error) {
-			echo '<div>Error: '. $error->getMessage() .'</div>';
+
+			echo '<div>Error '. $error->getCode() .': '. $error->getMessage() .'.</div>';
 			echo '<pre>'.PHP_EOL;
 			echo 'URL: '.$url.PHP_EOL;
-			print_r($process);
 			echo '</pre>';
+
+			$this->ready = false;
+
+			return false;
 		}
 	}
 	/*
@@ -294,18 +314,33 @@ class bugify {
 		   8888     ,88' .888888888. `88888.  8 8888         8 8888        `8b.  ;8.`8888
 			`8888888P'  .8'       `8. `88888. 8 888888888888 8 888888888888 `Y8888P ,88P'
 	 */
-	public function get_issues(){}
 
-	public function get_projects(){
-		$responce = $this->api_call('projects', 'GET');
-
-		return $responce;
-	}
 	public function ping_system(){
 		$responce = $this->api_call('system', 'GET');
 
 		return $responce;
 	}
+
+	public function select_project(){
+
+		try {
+			$projects = $this->api_call('projects', 'GET');
+
+			echo 'Hello World';
+			if($projects == false)
+				throw new Exception('Unable to get projects');
+			if(count($projects) == 0) // need to check on this
+				throw new Exception('Please setup a project on your bugify server and give your account access to it');
+
+
+			include('views/table-projects.php');
+
+		} catch (Exception $error) {
+			echo '<p style="color: red; font-size: 26px;">'.$error->getMessage().'</p>';
+		}
+	}
+
+	public function get_issues(){}
 	/*                                                                                                            
 		8 888888888o.      ,o888888o.     8 8888      88 8888888 8888888888  8 8888 b.             8 8 8888888888   
 		8 8888    `88.  . 8888     `88.   8 8888      88       8 8888        8 8888 888o.          8 8 8888         
