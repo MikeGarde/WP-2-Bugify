@@ -61,7 +61,7 @@ class bugify {
         wp_enqueue_style(  'bugify-css' );
     }
 	public function bugify_admin_menu() {
-		add_menu_page(		'Submit a Bug',
+		add_menu_page(		'Submit a Ticket',
 							'Bugify',
 							'manage_options',
 							'bugify',
@@ -70,11 +70,18 @@ class bugify {
 							110 );
 
 		add_submenu_page(	'bugify',
-							'Submit a Bug',
-							'Submit a Bug',
+							'Submit a Ticket',
+							'Submit a Ticket',
 							'manage_options',
 							'bugify',
 							array($this, 'bugify_view_submit') );
+
+		add_submenu_page(	'bugify',
+							'View Tickets',
+							'View Tickets',
+							'manage_options',
+							'bugify',
+							array($this, 'bugify_view_tic') );
 
 		add_submenu_page(	'bugify',
 							'Bugify Options',
@@ -326,12 +333,10 @@ class bugify {
 		try {
 			$projects = $this->api_call('projects', 'GET');
 
-			echo 'Hello World';
 			if($projects == false)
 				throw new Exception('Unable to get projects');
-			if(count($projects) == 0) // need to check on this
+			if($projects->total == 0) // need to check on this
 				throw new Exception('Please setup a project on your bugify server and give your account access to it');
-
 
 			include('views/table-projects.php');
 
