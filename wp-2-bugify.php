@@ -61,34 +61,34 @@ class bugify {
         wp_enqueue_style(  'bugify-css' );
     }
 	public function bugify_admin_menu() {
-		add_menu_page(		'Submit a Ticket',
+		add_menu_page(		'View Tickets',
 							'Bugify',
 							'manage_options',
 							'bugify',
-							array($this, 'bugify_view_submit'),
+							array($this, 'view_tickets'),
 							$this->plugin_url . 'img/bugify-logo-small.png',
 							110 );
 
 		add_submenu_page(	'bugify',
-							'Submit a Ticket',
-							'Submit a Ticket',
+							'View Tickets',
+							'View Tickets',
 							'manage_options',
 							'bugify',
-							array($this, 'bugify_view_submit') );
+							array($this, 'view_tickets') );
 
 		add_submenu_page(	'bugify',
-							'View Tickets',
-							'View Tickets',
+							'Submit a Ticket',
+							'Submit a Ticket',
 							'manage_options',
-							'bugify',
-							array($this, 'bugify_view_tic') );
+							'bugify-new_ticket',
+							array($this, 'view_new_ticket') );
 
 		add_submenu_page(	'bugify',
 							'Bugify Options',
 							'Options',
 							'manage_options',
 							'bugify-options',
-							array($this, 'bugify_view_options') );
+							array($this, 'view_options') );
 	}
 	/*
 		`8.`888b           ,8'  8 8888 8 8888888888 `8.`888b                 ,8' d888888o.   
@@ -103,11 +103,15 @@ class bugify {
 		         `8.`           8 8888 8 888888888888        `8.`   `8'        `Y8888P ,88P' 
 	*/
 
-	function bugify_view_submit() {
-		require_once('views/submit.php');
+	function view_tickets() {
+		$tickets = $this->get_tickets();
+		require_once('views/base---tickets.php');
 	}
-	function bugify_view_options() {
-		require_once('views/options.php');
+	function view_new_ticket() {
+		require_once('views/base---new_ticket.php');
+	}
+	function view_options() {
+		require_once('views/base---options.php');
 	}
 
 	/*                                                              
@@ -212,14 +216,31 @@ class bugify {
 		 .888888888. `88888.  8 8888          8 8888              8888     ,88'   ` 8888     ,88'   
 		.8'       `8. `88888. 8 8888          8 8888               `8888888P'        `8888888P'     
 	*/
-	private function api_call($service, $method='GET', $query=null){
+	private function api_call($service=null, $method='GET', $query=null){
 
 		try {
 
-			if(isset($this->cache[$service])) {
-				return $this->cache[$service];
+			if(is_string($service)){
+				$tmp = $service;
+				unset($service);
+				$service['name'] = $tmp;
 			}
+			
+			if(!isset($service['name']))
+				throw new Exception('No Bugify Service Specified', 500);
 
+			if(!isset($service['page']))
+				$service['page'] = 1;
+
+			if(!isset($service['limit']))
+				$service['limit'] = 20;
+
+			if( !isset($query) )
+				$cache = true;
+
+			if( ($cache == true) && isset( $this->cache[ $service['name'] ][ $service['limit'] ][ $service['page'] ] ) )
+				return $this->cache[ $service['name'] ][ $service['limit'] ][ $service['page'] ];
+			
 			$query['api_key'] = $this->options['key'];
 
 			foreach($query as $var => &$value) {
@@ -229,7 +250,7 @@ class bugify {
 			unset($value);
 			rtrim($query_string, '&');
 
-			$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'/'.$service.'.json';
+			$url = $this->request['scheme'].'://'.$this->request['host'].$this->request['path'].'/'.$service['name'].'.json';
 
 			if( ($method == 'GET') && (!empty($query)) )
 				$url .= '?'. $query_string;
@@ -282,7 +303,8 @@ class bugify {
 				throw new Exception($error_message, $headers['code']);
 			}
 
-			$this->cache[$service] = $return;
+			if($cache == true)
+				$this->cache[ $service['name'] ][ $service['limit'] ][ $service['page'] ] = $return;
 
 			return json_decode($return);
 
@@ -323,7 +345,8 @@ class bugify {
 	 */
 
 	public function ping_system(){
-		$responce = $this->api_call('system', 'GET');
+		$service = array('name'	=> 'system');
+		$responce = $this->api_call($service, 'GET');
 
 		return $responce;
 	}
@@ -338,14 +361,31 @@ class bugify {
 			if($projects->total == 0) // need to check on this
 				throw new Exception('Please setup a project on your bugify server and give your account access to it');
 
-			include('views/table-projects.php');
+			include('views/base---options_table-projects.php');
 
 		} catch (Exception $error) {
 			echo '<p style="color: red; font-size: 26px;">'.$error->getMessage().'</p>';
 		}
 	}
 
-	public function get_issues(){}
+	public function get_tickets(){
+		
+		try {
+			$services = array('name'	=> 'projects/'.$this->options['project'].'/issues');
+			$issues = $this->api_call($services, 'GET');
+
+			if($issues == false)
+				throw new Exception('Unable to get issues');
+			if($issues->total == 0) // need to check on this
+				throw new Exception('Please setup a project on your bugify server and give your account access to it');
+			
+			return $issues;
+
+		} catch (Exception $error) {
+			echo '<p style="color: red; font-size: 26px;">'.$error->getMessage().'</p>';
+		}
+
+	}
 	/*                                                                                                            
 		8 888888888o.      ,o888888o.     8 8888      88 8888888 8888888888  8 8888 b.             8 8 8888888888   
 		8 8888    `88.  . 8888     `88.   8 8888      88       8 8888        8 8888 888o.          8 8 8888         

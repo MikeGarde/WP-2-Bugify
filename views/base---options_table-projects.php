@@ -47,16 +47,16 @@ table.wp2b_table td select {min-width: 140px;}
 
 				$print_categories = rtrim($print_categories, ', ');
 
-				if($this->options['project'] == $project->id)
+				if($this->options['project'] == $project->slug)
 					$default_categories = json_encode($project_categories);
 ?>
 		<tr>
 			<td><input 	type="radio" 
 						name="<?php echo $this->opt_name; ?>_project" 
 						id="project_<?php echo $project->id; ?>" 
-						value="<?php echo $project->id; ?>"
+						value="<?php echo $project->slug; ?>"
 						data-cat='<?php echo json_encode($project_categories); ?>'
-						<?php if($this->options['project'] == $project->id) echo ' checked="checked"'; ?> /></td>
+						<?php if($this->options['project'] == $project->slug) echo ' checked="checked"'; ?> /></td>
 			<td class="name"><label for="project_<?php echo $project->id; ?>"><?php echo $project->name; ?></label></td>
 			<td>
 <?php 			echo $print_categories; ?>
